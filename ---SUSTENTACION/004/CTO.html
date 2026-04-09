@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENA Proyectos – Administrador</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f0f2f5; display:flex; min-height:100vh; font-size:14px; color:#222; }
+
+.sidebar { width:180px; min-height:100vh; background:#1e2a35; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:200; }
+.sidebar-brand { padding:14px 16px 12px; font-size:15px; font-weight:700; color:#fff; border-bottom:1px solid #2d3d4d; }
+.sidebar-sec { padding:10px 16px 4px; font-size:10px; font-weight:700; letter-spacing:1px; color:#3d5a70; text-transform:uppercase; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 16px; color:#9fb3c8; font-size:13px; cursor:pointer; transition:background .15s,color .15s; text-decoration:none; border:none; background:none; width:100%; text-align:left; }
+.nav-item:hover { background:#26374a; color:#fff; }
+.nav-item.active { background:#26374a; color:#fff; }
+.nav-item .ni { font-size:14px; width:18px; text-align:center; }
+.nav-badge { margin-left:auto; background:#e53935; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; }
+.nav-badge.azul { background:#1a73e8; }
+
+/* TOPBAR AZUL */
+.topbar { position:fixed; top:0; left:180px; right:0; height:48px; background:#1a73e8; display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:100; }
+.topbar-brand { color:#fff; font-size:15px; font-weight:700; }
+.topbar-nav { display:flex; align-items:center; gap:16px; }
+.topbar-nav button { color:rgba(255,255,255,.88); font-size:13px; background:none; border:none; cursor:pointer; padding:4px 0; }
+.topbar-nav button.active { color:#fff; font-weight:600; border-bottom:2px solid #fff; }
+.topbar-role { background:rgba(255,255,255,.2); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+.role-btn { padding:4px 11px; border-radius:20px; font-size:11.5px; font-weight:600; cursor:pointer; border:1.5px solid rgba(255,255,255,.5); color:#fff; background:transparent; text-decoration:none; }
+.role-btn.verde { border-color:#39A900; }
+.role-btn.naranja { border-color:#F57C00; }
+
+.main { margin-left:180px; padding-top:48px; flex:1; }
+.section { display:none; padding:24px 28px; }
+.section.active { display:block; }
+.page-title { font-size:21px; font-weight:700; color:#1a1a1a; margin-bottom:4px; }
+.page-sub { font-size:12px; color:#888; margin-bottom:18px; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+.kpi { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); border-top:3px solid #1a73e8; }
+.kpi.verde { border-top-color:#39A900; } .kpi.naranja { border-top-color:#F57C00; } .kpi.rojo { border-top-color:#e53935; }
+.kpi-label { font-size:11px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.kpi-val { font-size:28px; font-weight:700; color:#1a1a1a; line-height:1; }
+.kpi-sub { font-size:11px; color:#aaa; margin-top:4px; }
+
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+.stat-card { background:#fff; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,.06); border-top:3px solid #1a73e8; }
+.stat-label { font-size:13px; font-weight:600; color:#333; margin-bottom:6px; }
+.stat-val { font-size:28px; font-weight:700; color:#1a1a1a; }
+
+.two-col { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start; }
+.two-col2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+
+.card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.06); overflow:hidden; margin-bottom:14px; }
+.card:last-child { margin-bottom:0; }
+.card-head { padding:12px 16px; font-size:13px; font-weight:700; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+.card-head .vm { font-size:11px; color:#1a73e8; cursor:pointer; font-weight:500; }
+.card-body { padding:10px 16px 14px; }
+
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.bg { background:#39A900; color:#fff; } .bb { background:#1a73e8; color:#fff; }
+.bgr { background:#9e9e9e; color:#fff; } .bo { background:#F57C00; color:#fff; }
+.br { background:#e53935; color:#fff; }
+
+.srow { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f2f2f2; font-size:12.5px; }
+.srow:last-child { border-bottom:none; }
+.srow .name { font-weight:600; color:#1a1a1a; }
+.srow .sub { font-size:11px; color:#888; margin-top:1px; }
+
+.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+.tbl th { text-align:left; padding:8px 10px; background:#f7f7f7; color:#888; font-size:11px; font-weight:700; text-transform:uppercase; border-bottom:1px solid #eee; }
+.tbl td { padding:9px 10px; border-bottom:1px solid #f5f5f5; vertical-align:middle; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:#f0f5ff; }
+
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; font-weight:600; color:#444; margin-bottom:4px; display:block; }
+.form-input { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; outline:none; }
+.form-input:focus { border-color:#1a73e8; }
+.form-select { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; outline:none; background:#fff; }
+.btn-primary { background:#1a73e8; color:#fff; border:none; padding:9px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-primary:hover { background:#1557b0; }
+.btn-sec { background:#fff; color:#333; border:1.5px solid #ddd; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; margin-right:8px; }
+.btn-danger { background:#e53935; color:#fff; border:none; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
+
+.erow { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #f2f2f2; }
+.erow:last-child { border-bottom:none; }
+.ebox { min-width:36px; background:#e8f0fe; border-radius:7px; text-align:center; padding:4px 3px; flex-shrink:0; }
+.ebox .ed { font-size:15px; font-weight:700; color:#1a73e8; line-height:1; }
+.ebox .em { font-size:9px; color:#1557b0; font-weight:600; text-transform:uppercase; }
+.etitle { font-size:12.5px; font-weight:600; color:#1a1a1a; }
+.esub { font-size:11px; color:#888; margin-top:1px; }
+
+.act-row { display:flex; gap:8px; padding:7px 0; border-bottom:1px solid #f2f2f2; font-size:12px; align-items:flex-start; }
+.act-row:last-child { border-bottom:none; }
+.act-dot { width:7px; height:7px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.ad-g { background:#39A900; } .ad-o { background:#F57C00; } .ad-b { background:#1a73e8; } .ad-r { background:#e53935; }
+.act-text { flex:1; color:#333; line-height:1.4; }
+.act-time { font-size:11px; color:#aaa; white-space:nowrap; }
+
+.acceso { border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; text-decoration:none; }
+.acceso.verde { background:#e8f7e0; border:1.5px solid #39A900; }
+.acceso.naranja { background:#fff3e0; border:1.5px solid #F57C00; }
+.acc-icon { font-size:26px; }
+.acc-title { font-size:13.5px; font-weight:700; }
+.acc-title.verde { color:#2e7d32; }
+.acc-title.naranja { color:#e65100; }
+.acc-sub { font-size:11.5px; color:#666; margin-top:2px; }
+.acc-arrow { margin-left:auto; font-size:16px; color:#aaa; }
+
+.chat-wrap { display:flex; flex-direction:column; height:360px; }
+.chat-msgs { flex:1; overflow-y:auto; padding:8px 0; display:flex; flex-direction:column; gap:10px; }
+.msg { display:flex; gap:8px; align-items:flex-end; }
+.msg.mine { flex-direction:row-reverse; }
+.msg-avatar { width:28px; height:28px; border-radius:50%; background:#1e2a35; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.msg-bubble { max-width:60%; padding:8px 12px; border-radius:12px; font-size:12.5px; line-height:1.4; }
+.msg.other .msg-bubble { background:#f0f2f5; color:#222; border-bottom-left-radius:4px; }
+.msg.mine .msg-bubble { background:#1a73e8; color:#fff; border-bottom-right-radius:4px; }
+.msg-time { font-size:10px; color:#aaa; margin-top:2px; }
+.chat-input-row { display:flex; gap:8px; padding-top:10px; border-top:1px solid #eee; }
+.chat-input { flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:20px; font-size:13px; outline:none; }
+.chat-send { background:#1a73e8; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">SENA Proyectos</div>
+
+  <div class="sidebar-sec">General</div>
+  <button class="nav-item active" onclick="nav('inicio')"><span class="ni">🏠</span> Inicio</button>
+  <button class="nav-item" onclick="nav('reportes')"><span class="ni">📈</span> Reportes</button>
+  <button class="nav-item" onclick="nav('alertas')"><span class="ni">🔔</span> Alertas <span class="nav-badge">5</span></button>
+
+  <div class="sidebar-sec">Gestión</div>
+  <button class="nav-item" onclick="nav('fichas')"><span class="ni">📋</span> Fichas</button>
+  <button class="nav-item" onclick="nav('proyectos')"><span class="ni">🗂️</span> Proyectos</button>
+  <button class="nav-item" onclick="nav('instructores')"><span class="ni">👩‍🏫</span> Instructores</button>
+  <button class="nav-item" onclick="nav('aprendices')"><span class="ni">👥</span> Aprendices</button>
+
+  <div class="sidebar-sec">Vistas de Rol</div>
+  <button class="nav-item" onclick="window.open('dashboard_aprendiz_sena.html')"><span class="ni">🟢</span> Ver Aprendiz</button>
+  <button class="nav-item" onclick="window.open('dashboard_instructor_sena.html')"><span class="ni">🟠</span> Ver Instructor</button>
+
+  <div class="sidebar-sec">Sistema</div>
+  <button class="nav-item" onclick="nav('usuarios')"><span class="ni">👤</span> Usuarios</button>
+  <button class="nav-item" onclick="nav('mensajes')"><span class="ni">💬</span> Mensajes</button>
+  <button class="nav-item" onclick="nav('configuracion')"><span class="ni">⚙️</span> Configuración</button>
+</aside>
+
+<div class="topbar">
+  <div class="topbar-brand">SENA Proyectos</div>
+  <div class="topbar-nav">
+    <button onclick="nav('inicio')" class="active" id="tnav-inicio">Inicio</button>
+    <button onclick="nav('fichas')" id="tnav-fichas">Fichas</button>
+    <button onclick="nav('usuarios')" id="tnav-usuarios">Usuarios</button>
+    <button onclick="nav('reportes')" id="tnav-reportes">Reportes</button>
+    <a href="dashboard_aprendiz_sena.html" target="_blank"><button class="role-btn verde">Vista Aprendiz</button></a>
+    <a href="dashboard_instructor_sena.html" target="_blank"><button class="role-btn naranja">Vista Instructor</button></a>
+    <span class="topbar-role">Administrador</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- INICIO -->
+  <div class="section active" id="sec-inicio">
+    <div class="page-title">Inicio</div>
+    <div class="page-sub">Panel de administración · Acceso completo a todos los roles y módulos</div>
+
+    <div class="kpi-grid">
+      <div class="kpi verde"><div class="kpi-label">Total Fichas</div><div class="kpi-val">8</div><div class="kpi-sub">3 en fase lectiva</div></div>
+      <div class="kpi"><div class="kpi-label">Total Instructores</div><div class="kpi-val">12</div><div class="kpi-sub">10 activos</div></div>
+      <div class="kpi naranja"><div class="kpi-label">Total Aprendices</div><div class="kpi-val">247</div><div class="kpi-sub">18 en riesgo</div></div>
+      <div class="kpi rojo"><div class="kpi-label">Proyectos Activos</div><div class="kpi-val">34</div><div class="kpi-sub">6 requieren atención</div></div>
+    </div>
+
+    <div class="sec-title" style="font-size:14px;font-weight:700;margin-bottom:10px">Acceso rápido por rol</div>
+    <div class="two-col2" style="margin-bottom:18px">
+      <a href="dashboard_aprendiz_sena.html" target="_blank" class="acceso verde"><div class="acc-icon">👨‍💻</div><div><div class="acc-title verde">Vista Aprendiz</div><div class="acc-sub">Proyectos, tareas, calificaciones</div></div><div class="acc-arrow">→</div></a>
+      <a href="dashboard_instructor_sena.html" target="_blank" class="acceso naranja"><div class="acc-icon">👩‍🏫</div><div><div class="acc-title naranja">Vista Instructor</div><div class="acc-sub">Fichas, proyectos, aprendices</div></div><div class="acc-arrow">→</div></a>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="card"><div class="card-head">Estado de Fichas <span class="vm" onclick="nav('fichas')">Ver todas →</span></div><div class="card-body" style="padding:0 16px">
+          <table class="tbl"><thead><tr><th>Ficha</th><th>Instructor</th><th>Aprendices</th><th>Fase</th></tr></thead>
+          <tbody>
+            <tr><td><b>2758401</b></td><td>Miguel Ramírez</td><td>28</td><td><span class="badge bg">Lectiva</span></td></tr>
+            <tr><td><b>2841022</b></td><td>Sara López</td><td>30</td><td><span class="badge bg">Lectiva</span></td></tr>
+            <tr><td><b>2905115</b></td><td>Carlos Vera</td><td>26</td><td><span class="badge bo">Práctica</span></td></tr>
+            <tr><td><b>2633890</b></td><td>Ana Morales</td><td>29</td><td><span class="badge bb">Finalizada</span></td></tr>
+          </tbody></table>
+        </div></div>
+        <div class="card"><div class="card-head">🚨 Proyectos críticos <span class="vm" onclick="nav('proyectos')">Ver →</span></div><div class="card-body">
+          <div class="srow"><div><div class="name">Sistema Facturación Electrónica</div><div class="sub">Ficha 2905115 · Sin avance 2 semanas</div></div><span class="badge br">Crítico</span></div>
+          <div class="srow"><div><div class="name">Portal Web Inventarios</div><div class="sub">Ficha 2841022 · Entregable vencido</div></div><span class="badge bo">Alerta</span></div>
+          <div class="srow"><div><div class="name">App Gestión Escolar</div><div class="sub">Ficha 2633890 · 3 sin entregar</div></div><span class="badge bo">Alerta</span></div>
+        </div></div>
+      </div>
+      <div>
+        <div class="card"><div class="card-head">📅 Próximos Eventos</div><div class="card-body">
+          <div class="erow"><div class="ebox"><div class="ed">27</div><div class="em">Mar</div></div><div><div class="etitle">Jurado F.2758401</div><div class="esub">8:00 am · Sala 301</div></div></div>
+          <div class="erow"><div class="ebox"><div class="ed">2</div><div class="em">Abr</div></div><div><div class="etitle">Visita Coordinación</div><div class="esub">10:00 am · Auditorio</div></div></div>
+          <div class="erow"><div class="ebox"><div class="ed">8</div><div class="em">Abr</div></div><div><div class="etitle">Cierre Lectiva F.2905115</div><div class="esub">Todo el día</div></div></div>
+        </div></div>
+        <div class="card"><div class="card-head">🕐 Actividad Reciente</div><div class="card-body">
+          <div class="act-row"><div class="act-dot ad-g"></div><div class="act-text"><b>Carlos Niño</b> entregó Sprint 3</div><div class="act-time">5 min</div></div>
+          <div class="act-row"><div class="act-dot ad-b"></div><div class="act-text">Ficha <b>2905115</b> inició fase práctica</div><div class="act-time">1 h</div></div>
+          <div class="act-row"><div class="act-dot ad-r"></div><div class="act-text"><b>Ana Torres</b> marcada en riesgo</div><div class="act-time">2 h</div></div>
+          <div class="act-row"><div class="act-dot ad-o"></div><div class="act-text">Instructor <b>Jorge Rueda</b> registrado</div><div class="act-time">Ayer</div></div>
+          <div class="act-row"><div class="act-dot ad-g"></div><div class="act-text">Proyecto <b>App Móvil</b> finalizado</div><div class="act-time">Ayer</div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTES -->
+  <div class="section" id="sec-reportes">
+    <div class="page-title">Reportes</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Promedio general</div><div class="stat-val" style="color:#39A900">4.1</div></div>
+      <div class="stat-card"><div class="stat-label">Tasa de entrega</div><div class="stat-val" style="color:#1a73e8">82%</div></div>
+      <div class="stat-card"><div class="stat-label">Aprendices en riesgo</div><div class="stat-val" style="color:#e53935">18</div></div>
+    </div>
+    <div class="card"><div class="card-head">Resumen por ficha</div><div class="card-body" style="padding:0 16px">
+      <table class="tbl"><thead><tr><th>Ficha</th><th>Instructor</th><th>Aprendices</th><th>Promedio</th><th>Entregas OK</th><th>En riesgo</th></tr></thead>
+      <tbody>
+        <tr><td><b>2758401</b></td><td>Miguel Ramírez</td><td>28</td><td>4.2</td><td>87%</td><td><span class="badge br">2</span></td></tr>
+        <tr><td><b>2841022</b></td><td>Sara López</td><td>30</td><td>4.0</td><td>80%</td><td><span class="badge bo">1</span></td></tr>
+        <tr><td><b>2905115</b></td><td>Carlos Vera</td><td>26</td><td>3.8</td><td>76%</td><td><span class="badge br">2</span></td></tr>
+        <tr><td><b>2633890</b></td><td>Ana Morales</td><td>29</td><td>4.4</td><td>92%</td><td><span class="badge bgr">0</span></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="section" id="sec-alertas">
+    <div class="page-title">Alertas del Sistema</div>
+    <div class="card"><div class="card-body">
+      <div class="srow"><div><div class="name">Ana Torres – Sin entregas hace 2 semanas</div><div class="sub">Ficha 2758401</div></div><span class="badge br">Crítico</span></div>
+      <div class="srow"><div><div class="name">Camila Ruiz – Ausentismo grave</div><div class="sub">Ficha 2905115</div></div><span class="badge br">Crítico</span></div>
+      <div class="srow"><div><div class="name">Sistema Facturación – Sin avance 2 semanas</div><div class="sub">Ficha 2905115</div></div><span class="badge br">Crítico</span></div>
+      <div class="srow"><div><div class="name">Luis García – Bajo rendimiento</div><div class="sub">Ficha 2841022</div></div><span class="badge bo">Alerta</span></div>
+      <div class="srow"><div><div class="name">Portal Inventarios – Entregable vencido</div><div class="sub">Ficha 2841022</div></div><span class="badge bo">Alerta</span></div>
+    </div></div>
+  </div>
+
+  <!-- FICHAS -->
+  <div class="section" id="sec-fichas">
+    <div class="page-title">Fichas</div>
+    <div class="two-col2">
+      <div class="card"><div class="card-head">Fichas registradas</div><div class="card-body" style="padding:0 16px">
+        <table class="tbl"><thead><tr><th>Ficha</th><th>Instructor</th><th>Aprendices</th><th>Proyectos</th><th>Fase</th></tr></thead>
+        <tbody>
+          <tr><td><b>2758401</b></td><td>Miguel Ramírez</td><td>28</td><td>4</td><td><span class="badge bg">Lectiva</span></td></tr>
+          <tr><td><b>2841022</b></td><td>Sara López</td><td>30</td><td>5</td><td><span class="badge bg">Lectiva</span></td></tr>
+          <tr><td><b>2905115</b></td><td>Carlos Vera</td><td>26</td><td>3</td><td><span class="badge bo">Práctica</span></td></tr>
+          <tr><td><b>2633890</b></td><td>Ana Morales</td><td>29</td><td>6</td><td><span class="badge bb">Finalizada</span></td></tr>
+          <tr><td><b>2710045</b></td><td>Jorge Rueda</td><td>25</td><td>0</td><td><span class="badge bgr">Por iniciar</span></td></tr>
+        </tbody></table>
+      </div></div>
+      <div class="card"><div class="card-head">Crear nueva ficha</div><div class="card-body">
+        <div class="form-group"><label class="form-label">Número de ficha</label><input class="form-input" placeholder="Ej: 3012456"></div>
+        <div class="form-group"><label class="form-label">Programa</label><select class="form-select"><option>ADSO</option><option>Diseño Web</option><option>Soporte TI</option></select></div>
+        <div class="form-group"><label class="form-label">Instructor asignado</label><select class="form-select"><option>Miguel Ramírez</option><option>Sara López</option><option>Carlos Vera</option><option>Ana Morales</option></select></div>
+        <div class="form-group"><label class="form-label">Fase inicial</label><select class="form-select"><option>Lectiva</option><option>Práctica</option></select></div>
+        <button class="btn-primary" onclick="alert('Ficha creada correctamente')">Crear ficha</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- PROYECTOS -->
+  <div class="section" id="sec-proyectos">
+    <div class="page-title">Proyectos</div>
+    <div class="card"><div class="card-body" style="padding:0 16px">
+      <table class="tbl"><thead><tr><th>Proyecto</th><th>Ficha</th><th>Aprendices</th><th>Progreso</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sistema Gestión SENA</b></td><td>2758401</td><td>6</td><td>68%</td><td><span class="badge bg">En Desarrollo</span></td></tr>
+        <tr><td><b>App Móvil ADSO</b></td><td>2758401</td><td>5</td><td>100%</td><td><span class="badge bb">Finalizado</span></td></tr>
+        <tr><td><b>Portal Web Inventarios</b></td><td>2841022</td><td>7</td><td>85%</td><td><span class="badge bo">En Revisión</span></td></tr>
+        <tr><td><b>Sistema Facturación</b></td><td>2905115</td><td>8</td><td>12%</td><td><span class="badge bgr">Planeación</span></td></tr>
+        <tr><td><b>App Gestión Escolar</b></td><td>2633890</td><td>6</td><td>100%</td><td><span class="badge bb">Finalizado</span></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <!-- INSTRUCTORES -->
+  <div class="section" id="sec-instructores">
+    <div class="page-title">Instructores</div>
+    <div class="two-col2">
+      <div class="card"><div class="card-head">Instructores registrados</div><div class="card-body" style="padding:0 16px">
+        <table class="tbl"><thead><tr><th>Instructor</th><th>Fichas</th><th>Aprendices</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td><b>Miguel Ramírez</b></td><td>1</td><td>28</td><td><span class="badge bg">Activo</span></td></tr>
+          <tr><td><b>Sara López</b></td><td>2</td><td>60</td><td><span class="badge bg">Activo</span></td></tr>
+          <tr><td><b>Carlos Vera</b></td><td>1</td><td>26</td><td><span class="badge bo">Carga alta</span></td></tr>
+          <tr><td><b>Ana Morales</b></td><td>2</td><td>58</td><td><span class="badge bg">Activo</span></td></tr>
+          <tr><td><b>Jorge Rueda</b></td><td>1</td><td>25</td><td><span class="badge bgr">Nuevo</span></td></tr>
+        </tbody></table>
+      </div></div>
+      <div class="card"><div class="card-head">Registrar instructor</div><div class="card-body">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" placeholder="Nombre del instructor"></div>
+        <div class="form-group"><label class="form-label">Correo institucional</label><input class="form-input" placeholder="correo@sena.edu.co"></div>
+        <div class="form-group"><label class="form-label">Especialidad</label><select class="form-select"><option>ADSO</option><option>Diseño Web</option><option>Soporte TI</option></select></div>
+        <button class="btn-primary" onclick="alert('Instructor registrado')">Registrar</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- APRENDICES -->
+  <div class="section" id="sec-aprendices">
+    <div class="page-title">Aprendices</div>
+    <div class="card"><div class="card-body" style="padding:0 16px">
+      <table class="tbl"><thead><tr><th>Aprendiz</th><th>Ficha</th><th>Instructor</th><th>Entregas</th><th>Nota prom.</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td><b>Carlos Niño</b></td><td>2758401</td><td>Ramírez</td><td>8/8</td><td>4.6</td><td><span class="badge bg">Al día</span></td></tr>
+        <tr><td><b>Laura Peña</b></td><td>2758401</td><td>Ramírez</td><td>7/8</td><td>4.1</td><td><span class="badge bg">Al día</span></td></tr>
+        <tr><td><b>Ana Torres</b></td><td>2758401</td><td>Ramírez</td><td>4/8</td><td>3.0</td><td><span class="badge br">Crítico</span></td></tr>
+        <tr><td><b>Luis García</b></td><td>2841022</td><td>López</td><td>6/8</td><td>3.5</td><td><span class="badge bo">Alerta</span></td></tr>
+        <tr><td><b>Camila Ruiz</b></td><td>2905115</td><td>Vera</td><td>3/8</td><td>2.8</td><td><span class="badge br">Crítico</span></td></tr>
+        <tr><td><b>María Cárdenas</b></td><td>2841022</td><td>López</td><td>8/8</td><td>4.9</td><td><span class="badge bg">Al día</span></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <!-- USUARIOS -->
+  <div class="section" id="sec-usuarios">
+    <div class="page-title">Usuarios del Sistema</div>
+    <div class="two-col2">
+      <div class="card"><div class="card-head">Usuarios registrados</div><div class="card-body" style="padding:0 16px">
+        <table class="tbl"><thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <tr><td><b>admin@sena.edu.co</b></td><td><span class="badge bb">Admin</span></td><td><span class="badge bg">Activo</span></td><td>—</td></tr>
+          <tr><td><b>m.ramirez@sena.edu.co</b></td><td><span class="badge bo">Instructor</span></td><td><span class="badge bg">Activo</span></td><td><button class="btn-danger" onclick="alert('Usuario desactivado')">Desactivar</button></td></tr>
+          <tr><td><b>s.lopez@sena.edu.co</b></td><td><span class="badge bo">Instructor</span></td><td><span class="badge bg">Activo</span></td><td><button class="btn-danger" onclick="alert('Usuario desactivado')">Desactivar</button></td></tr>
+          <tr><td><b>juan.perez@sena.edu.co</b></td><td><span class="badge bgr">Aprendiz</span></td><td><span class="badge bg">Activo</span></td><td><button class="btn-danger" onclick="alert('Usuario desactivado')">Desactivar</button></td></tr>
+        </tbody></table>
+      </div></div>
+      <div class="card"><div class="card-head">Crear usuario</div><div class="card-body">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" placeholder="Nombre"></div>
+        <div class="form-group"><label class="form-label">Correo</label><input class="form-input" placeholder="correo@sena.edu.co"></div>
+        <div class="form-group"><label class="form-label">Rol</label><select class="form-select"><option>Aprendiz</option><option>Instructor</option><option>Administrador</option></select></div>
+        <div class="form-group"><label class="form-label">Contraseña temporal</label><input class="form-input" type="password" placeholder="Contraseña"></div>
+        <button class="btn-primary" onclick="alert('Usuario creado correctamente')">Crear usuario</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- MENSAJES -->
+  <div class="section" id="sec-mensajes">
+    <div class="page-title">Mensajes</div>
+    <div class="card"><div class="card-head">Canal general – Administración</div><div class="card-body">
+      <div class="chat-wrap">
+        <div class="chat-msgs" id="chatMsgsA">
+          <div class="msg other"><div class="msg-avatar">MR</div><div><div class="msg-bubble">Admin, ¿ya está lista la ficha 2710045?</div><div class="msg-time">9:00 am</div></div></div>
+          <div class="msg mine"><div class="msg-avatar" style="background:#1a73e8">AD</div><div><div class="msg-bubble">Sí, acabo de registrar al instructor Jorge Rueda</div><div class="msg-time">9:05 am</div></div></div>
+          <div class="msg other"><div class="msg-avatar">SL</div><div><div class="msg-bubble">Perfecto. ¿Cuándo arranca la fase lectiva?</div><div class="msg-time">9:07 am</div></div></div>
+          <div class="msg mine"><div class="msg-avatar" style="background:#1a73e8">AD</div><div><div class="msg-bubble">La próxima semana. Les envío el cronograma hoy</div><div class="msg-time">9:10 am</div></div></div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInputA" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendMsgA()">
+          <button class="chat-send" onclick="sendMsgA()">Enviar</button>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- CONFIGURACION -->
+  <div class="section" id="sec-configuracion">
+    <div class="page-title">Configuración</div>
+    <div class="two-col2">
+      <div class="card"><div class="card-head">Datos del administrador</div><div class="card-body">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" value="Admin SENA"></div>
+        <div class="form-group"><label class="form-label">Correo</label><input class="form-input" value="admin@sena.edu.co"></div>
+        <div class="form-group"><label class="form-label">Centro de formación</label><input class="form-input" value="Centro de Servicios Financieros"></div>
+        <button class="btn-primary" onclick="alert('Datos guardados')">Guardar cambios</button>
+      </div></div>
+      <div class="card"><div class="card-head">Seguridad</div><div class="card-body">
+        <div class="form-group"><label class="form-label">Contraseña actual</label><input class="form-input" type="password"></div>
+        <div class="form-group"><label class="form-label">Nueva contraseña</label><input class="form-input" type="password"></div>
+        <div class="form-group"><label class="form-label">Confirmar</label><input class="form-input" type="password"></div>
+        <button class="btn-primary" onclick="alert('Contraseña actualizada')">Cambiar contraseña</button>
+      </div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function nav(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.topbar-nav button:not(.role-btn)').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => { if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("nav('"+id+"')")) n.classList.add('active'); });
+  const tb = document.getElementById('tnav-' + id);
+  if(tb) tb.classList.add('active');
+}
+function sendMsgA() {
+  const input = document.getElementById('chatInputA');
+  const txt = input.value.trim();
+  if(!txt) return;
+  const msgs = document.getElementById('chatMsgsA');
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0') + ' ' + (now.getHours()<12?'am':'pm');
+  msgs.innerHTML += `<div class="msg mine"><div class="msg-avatar" style="background:#1a73e8">AD</div><div><div class="msg-bubble">${txt}</div><div class="msg-time">${time}</div></div></div>`;
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+}
+</script>
+</body>
+</html>
